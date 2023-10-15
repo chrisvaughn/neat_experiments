@@ -1,0 +1,4 @@
+neat-python
+gymnasium[box2d]
+graphviz
+matplotlib
