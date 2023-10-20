@@ -10,7 +10,7 @@ import neat
 import gymnasium as gym
 import visualize
 
-runs_per_net = 5
+runs_per_net = 100
 
 
 # Use the NN network phenotype and the discrete actuator force function.
@@ -18,14 +18,13 @@ def eval_genome(genome, config):
     net = neat.nn.FeedForwardNetwork.create(genome, config)
 
     fitnesses = []
-    env = gym.make("CartPole-v1")
+    env = gym.make("MountainCarContinuous-v0")
     for runs in range(runs_per_net):
         observation, info = env.reset()
-        # Run the given simulation for up to num_steps time steps.
         fitness = 0.0
         done = False
         while not done:
-            action = np.argmax(net.activate(observation))
+            action = net.activate(observation)
             observation, reward, terminated, truncated, info = env.step(action)
             done = terminated or truncated
             fitness += reward

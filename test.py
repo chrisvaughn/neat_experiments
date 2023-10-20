@@ -29,28 +29,11 @@ config = neat.Config(
 )
 
 net = neat.nn.FeedForwardNetwork.create(c, config)
-env = gym.make("CartPole-v1", render_mode="human")
+env = gym.make("MountainCarContinuous-v0", render_mode="human")
 observation, info = env.reset()
-
-print()
-print("Initial conditions:")
-print("        x = {0:.4f}".format(observation[0]))
-print("    x_dot = {0:.4f}".format(observation[1]))
-print("    theta = {0:.4f}".format(observation[2]))
-print("theta_dot = {0:.4f}".format(observation[3]))
-print()
 
 done = False
 while not done:
-    action = np.argmax(net.activate(observation))
+    action = net.activate(observation)
     observation, reward, terminated, truncated, info = env.step(action)
     done = terminated or truncated
-
-
-print()
-print("Final conditions:")
-print("        x = {0:.4f}".format(observation[0]))
-print("    x_dot = {0:.4f}".format(observation[1]))
-print("    theta = {0:.4f}".format(observation[2]))
-print("theta_dot = {0:.4f}".format(observation[3]))
-print()
