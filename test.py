@@ -4,17 +4,24 @@ Test the performance of the best genome produced by evolve.py.
 
 import os
 import pickle
+import sys
 
-import neat
 import gymnasium as gym
-import numpy as np
+import neat
 
-# load the winner
-with open("winner", "rb") as f:
-    c = pickle.load(f)
+from evolve import eval_genomes
+
+if sys.argv[1] == "best":
+    print("Using best instead of winner.")
+    with open("best", "rb") as f:
+        winner = pickle.load(f)
+else:
+    # load the winner
+    with open("winner", "rb") as f:
+        winner = pickle.load(f)
 
 print("Loaded genome:")
-print(c)
+print(winner)
 
 # Load the config file, which is assumed to live in
 # the same directory as this script.
@@ -28,8 +35,8 @@ config = neat.Config(
     config_path,
 )
 
-net = neat.nn.FeedForwardNetwork.create(c, config)
-env = gym.make("MountainCarContinuous-v0", render_mode="human")
+net = neat.nn.FeedForwardNetwork.create(winner, config)
+env = gym.make("BipedalWalker-v3", render_mode="human")
 observation, info = env.reset()
 
 done = False

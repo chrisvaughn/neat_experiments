@@ -5,12 +5,27 @@ Single-pole balancing experiment using a feed-forward neural network.
 import multiprocessing
 import os
 import pickle
-import numpy as np
-import neat
+import sys
+
 import gymnasium as gym
+import neat
+import numpy as np
+
 import visualize
 
-runs_per_net = 100
+runs_per_net = 20
+generations = 500
+
+restore = False
+checkpoint_filename = "neat-checkpoint-179"
+if len(sys.argv) > 1 and sys.argv[1] == "restore":
+    restore = True
+
+
+class SaveBestGenome(neat.reporting.BaseReporter):
+    def post_evaluate(self, config, population, species, best_genome):
+        with open("best", "wb") as f:
+            pickle.dump(best_genome, f)
 
 
 # Use the NN network phenotype and the discrete actuator force function.
@@ -18,7 +33,7 @@ def eval_genome(genome, config):
     net = neat.nn.FeedForwardNetwork.create(genome, config)
 
     fitnesses = []
-    env = gym.make("MountainCarContinuous-v0")
+    env = gym.make("BipedalWalker-v3")
     for runs in range(runs_per_net):
         observation, info = env.reset()
         fitness = 0.0
@@ -30,7 +45,6 @@ def eval_genome(genome, config):
             fitness += reward
         fitnesses.append(fitness)
 
-    # The genome's fitness is its worst performance across all runs.
     return np.mean(fitnesses)
 
 
@@ -52,13 +66,22 @@ def run():
         config_path,
     )
 
-    pop = neat.Population(config)
+    if restore:
+        print(f"Restoring from {checkpoint_filename}")
+        pop = neat.checkpoint.Checkpointer.restore_checkpoint(checkpoint_filename)
+    else:
+        pop = neat.Population(config)
+
     stats = neat.StatisticsReporter()
     pop.add_reporter(stats)
+    save_best_genome = SaveBestGenome()
+    pop.add_reporter(save_best_genome)
     pop.add_reporter(neat.StdOutReporter(True))
+    checkpointer = neat.Checkpointer(10, 900)
+    pop.add_reporter(checkpointer)
 
     pe = neat.ParallelEvaluator(multiprocessing.cpu_count(), eval_genome)
-    winner = pop.run(pe.evaluate)
+    winner = pop.run(pe.evaluate, generations)
 
     # Save the winner.
     with open("winner", "wb") as f:
